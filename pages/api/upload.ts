@@ -18,16 +18,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { file, filename } = req.body
     
     // Base64デコード
-    const buffer = Buffer.from(file.split(',')[1], 'base64')
+    const base64Data = file.split(',')[1]
+    const buffer = Buffer.from(base64Data, 'base64')
     
-    // Vercel Blobにアップロード
+    // Vercel Blobにアップロード（正しい引数順序）
     const blob = await put(filename, buffer, {
       access: 'public',
+      contentType: 'image/jpeg',
     })
 
     res.status(200).json({ url: blob.url })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Upload error:', error)
-    res.status(500).json({ error: 'Upload failed' })
+    res.status(500).json({ error: error.message || 'Upload failed' })
   }
 }
