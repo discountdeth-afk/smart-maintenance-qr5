@@ -17,17 +17,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { file, filename } = req.body
     
+    if (!file || !filename) {
+      return res.status(400).json({ error: 'File and filename required' })
+    }
+    
     // Base64デコード
     const base64Data = file.split(',')[1]
     const buffer = Buffer.from(base64Data, 'base64')
     
-    // Vercel Blobにアップロード（正しい引数順序）
-    const blob = await put(filename, buffer, {
+    // BufferをBlobに変換
+    const blob = new Blob([buffer], { type: 'image/jpeg' })
+    
+    // Vercel Blobにアップロード
+    const result = await put(filename, blob, {
       access: 'public',
-      contentType: 'image/jpeg',
     })
 
-    res.status(200).json({ url: blob.url })
+    res.status(200).json({ url: result.url })
   } catch (error: any) {
     console.error('Upload error:', error)
     res.status(500).json({ error: error.message || 'Upload failed' })
